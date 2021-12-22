@@ -1,7 +1,7 @@
 import sys
 import os
 import unicodedata
-import pickle
+import json
 import math
 
 # -----------------------------------
@@ -28,9 +28,11 @@ indice_descripciones = {}
 # Todos los elementos de la tupla son strings
 entradas = []
 
+
 # -----------------------------------
 # Funciones de indexado
 # -----------------------------------
+
 
 def generar_indices(ruta):
     encontrada_base_datos = False
@@ -70,17 +72,17 @@ def guardar_indices(ruta):
         except OSError as error:
             print('Error, no se pudieron guardar los indices: {}'.format(error))
 
-    with open(ruta_indices + '/indice_titulos.bin', 'wb') as archivo:
-        pickle.dump(indice_titulos, archivo)
+    with open(ruta_indices + '/indice_titulos.json', 'w') as archivo:
+        json.dump(indice_titulos, archivo)
 
-    with open(ruta_indices + '/indice_directores.bin', 'wb') as archivo:
-        pickle.dump(indice_directores, archivo)
+    with open(ruta_indices + '/indice_directores.json', 'w') as archivo:
+        json.dump(indice_directores, archivo)
 
-    with open(ruta_indices + '/indice_descripciones.bin', 'wb') as archivo:
-        pickle.dump(indice_descripciones, archivo)
+    with open(ruta_indices + '/indice_descripciones.json', 'w') as archivo:
+        json.dump(indice_descripciones, archivo)
 
-    with open(ruta_indices + '/entradas.bin', 'wb') as archivo:
-        pickle.dump(entradas, archivo)
+    with open(ruta_indices + '/entradas.json', 'w') as archivo:
+        json.dump(entradas, archivo)
 
 
 def cargar_indices(ruta):
@@ -93,17 +95,19 @@ def cargar_indices(ruta):
 
     ruta_indices = ruta + '/' + '__index'
 
-    with open(ruta_indices + '/indice_titulos.bin', 'rb') as archivo:
-        indice_titulos = pickle.load(archivo)
+    with open(ruta_indices + '/indice_titulos.json', 'r') as archivo:
+        indice_titulos = json.load(archivo)
 
-    with open(ruta_indices + '/indice_directores.bin', 'rb') as archivo:
-        indice_directores = pickle.load(archivo)
+    with open(ruta_indices + '/indice_directores.json', 'r') as archivo:
+        indice_directores = json.load(archivo)
 
-    with open(ruta_indices + '/indice_descripciones.bin', 'rb') as archivo:
-        indice_descripciones = pickle.load(archivo)
+    with open(ruta_indices + '/indice_descripciones.json', 'r') as archivo:
+        indice_descripciones = json.load(archivo)
 
-    with open(ruta_indices + '/entradas.bin', 'rb') as archivo:
-        entradas = pickle.load(archivo)
+    with open(ruta_indices + '/entradas.json', 'r') as archivo:
+        entradas = json.load(archivo)
+        # Convertimos las entradas a tupla
+        entradas = [tuple(x) for x in entradas]
 
 
 def existen_indices_precomputados(ruta):
@@ -118,10 +122,10 @@ def existen_indices_precomputados(ruta):
             file_names.add(e.name)
 
     archivos_necesarios = [
-        'indice_titulos.bin',
-        'indice_directores.bin',
-        'indice_descripciones.bin',
-        'entradas.bin'
+        'indice_titulos.json',
+        'indice_directores.json',
+        'indice_descripciones.json',
+        'entradas.json'
     ]
 
     for archivo in archivos_necesarios:
@@ -137,7 +141,7 @@ def indexar_fichero(ruta_fichero, ind_titulos, ind_directores, ind_descripciones
             linea = linea.rstrip('\n')
 
             # Extraer datos de la linea
-            id,titulo,anyo,director,tipo,descripcion = linea.split('\t')
+            id, titulo, anyo, director, tipo, descripcion = linea.split('\t')
 
             # Agregar datos a la lista de tuplas
             posicion = len(entradas)
@@ -208,7 +212,7 @@ def quitar_acentos(cadena):
 # -----------------------------------
 
 def buscador(busqueda, indice, entradasbd):
-    preproc =preprocesar(busqueda)
+    preproc = preprocesar(busqueda)
     result = []
     if preproc in indice:
         for posicion in indice[preproc]:
@@ -358,14 +362,15 @@ def visualizar_descripcion(resultados, pagina):
             return
 
         # Mostrar descripcion del resultado num
-        id, titulo, anyo, director, tipo, ruta_fichero = resultados[num-1]
+        id, titulo, anyo, director, tipo, ruta_fichero = resultados[num - 1]
 
         with open(ruta_fichero, 'r') as f:
             for linea in f:
                 linea = linea.rstrip('\n')
 
                 # Extraer datos de la linea
-                id_archivo,titulo_archivo,anyo_archivo,director_archivo,tipo_archivo,descripcion_archivo = linea.split('\t')
+                id_archivo, titulo_archivo, anyo_archivo, director_archivo, tipo_archivo, descripcion_archivo = linea.split(
+                    '\t')
                 if id == id_archivo:
                     print()
                     print(descripcion_archivo)
@@ -429,6 +434,7 @@ def mostrar_menu():
             mostrar_resultados(buscador_descripcion(descripcion, indice_descripciones, entradas))
         elif num == 5:
             return
+
 
 # -----------------------------------
 # Programa principal
