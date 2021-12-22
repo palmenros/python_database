@@ -32,7 +32,6 @@ entradas = []
 # -----------------------------------
 
 def generar_indices(ruta):
-
     encontrada_base_datos = False
 
     for subdir, dirs, files in os.walk(ruta):
@@ -84,7 +83,26 @@ def guardar_indices(ruta):
 
 
 def cargar_indices(ruta):
+    global indice_titulos
+    global indice_directores
+    global indice_descripciones
+    global entradas
+
     print('Cargando los índices desde disco.')
+
+    ruta_indices = ruta + '/' + '__index'
+
+    with open(ruta_indices + '/indice_titulos.bin', 'rb') as archivo:
+        indice_titulos = pickle.load(archivo)
+
+    with open(ruta_indices + '/indice_directores.bin', 'rb') as archivo:
+        indice_directores = pickle.load(archivo)
+
+    with open(ruta_indices + '/indice_descripciones.bin', 'rb') as archivo:
+        indice_descripciones = pickle.load(archivo)
+
+    with open(ruta_indices + '/entradas.bin', 'rb') as archivo:
+        entradas = pickle.load(archivo)
 
 
 def existen_indices_precomputados(ruta):
@@ -96,7 +114,7 @@ def existen_indices_precomputados(ruta):
 
     for e in carpeta_indices:
         if e.is_file():
-            file_names.add(e)
+            file_names.add(e.name)
 
     archivos_necesarios = [
         'indice_titulos.bin',
