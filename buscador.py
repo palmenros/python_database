@@ -2,6 +2,7 @@ import sys
 import os
 import unicodedata
 import pickle
+import math
 
 # -----------------------------------
 # Indices
@@ -315,46 +316,85 @@ def pedir_numero_entre(texto, inferior, superior):
             print("Error: Debe introducir un numero")
 
 
-def visualizar_descripcion(resultados):
+def visualizar_descripcion(resultados, pagina):
+    num_elementos_por_pagina = 20
+
+    nueva_pagina = pagina
 
     # No results to show
     if len(resultados) == 0:
         return
 
-    num = pedir_numero_entre('Introduce el número de resultado para el que quieres visualizar la descripción o 0 para volver al menú principal: ', 0, len(resultados))
+    texto = 'Introduce el número de resultado para el que quieres visualizar la descripción, 0 para volver al menú principal, S para pasar a la página siguiente o A para pasar a la página anterior: '
 
-    if num == 0:
-        return
+    while True:
+        res = input(texto)
 
-    # Mostrar descripcion del resultado num
-    id, titulo, anyo, director, tipo, ruta_fichero = resultados[num-1]
+        if res == 'S' or res == 'A':
+            break
 
-    with open(ruta_fichero, 'r') as f:
-        for linea in f:
-            linea = linea.rstrip('\n')
+        try:
+            num = int(res)
 
-            # Extraer datos de la linea
-            id_archivo,titulo_archivo,anyo_archivo,director_archivo,tipo_archivo,descripcion_archivo = linea.split('\t')
-            if id == id_archivo:
-                print()
-                print(descripcion_archivo)
+            inferior = 1 + (pagina - 1) * num_elementos_por_pagina
+            superior = inferior + 20 - 1
+
+            if (num < inferior and num != 0) or num > superior:
+                print('Error: Debe introducir un numero entre {} y {} o 0 o A o S'.format(inferior, superior))
+            else:
                 break
+        except ValueError:
+            print("Error: Debe introducir un numero o A o S")
 
-    mostrar_resultados(resultados)
+    if res == 'S':
+        num_paginas = math.ceil(len(resultados) / num_elementos_por_pagina)
+        if pagina != num_paginas:
+            nueva_pagina = pagina + 1
+    elif res == 'A':
+        if pagina != 1:
+            nueva_pagina = pagina - 1
+    else:
+        if num == 0:
+            return
+
+        # Mostrar descripcion del resultado num
+        id, titulo, anyo, director, tipo, ruta_fichero = resultados[num-1]
+
+        with open(ruta_fichero, 'r') as f:
+            for linea in f:
+                linea = linea.rstrip('\n')
+
+                # Extraer datos de la linea
+                id_archivo,titulo_archivo,anyo_archivo,director_archivo,tipo_archivo,descripcion_archivo = linea.split('\t')
+                if id == id_archivo:
+                    print()
+                    print(descripcion_archivo)
+                    break
+
+    mostrar_resultados(resultados, nueva_pagina)
 
 
-def mostrar_resultados(resultados):
+def mostrar_resultados(resultados, pagina=1):
+    num_elementos_por_pagina = 20
+
+    num_paginas = math.ceil(len(resultados) / num_elementos_por_pagina)
 
     if len(resultados) != 1:
-        print("\n{} elementos encontrados".format(len(resultados)))
+        print("\n{} elementos encontrados. Página {} de {}.".format(len(resultados), pagina, num_paginas))
     else:
-        print("\n1 elemento encontrado")
+        print("\n1 elemento encontrado. Página 1 de 1.")
 
-    for i, tupla in enumerate(resultados, start=1):
+    primer_elemento_resultados = (pagina - 1) * num_elementos_por_pagina
+    ultimo_elemento_resultados = pagina * num_elementos_por_pagina
+
+    comienzo_indice = 1 + (pagina - 1) * num_elementos_por_pagina
+
+    for i, tupla in enumerate(resultados[primer_elemento_resultados:ultimo_elemento_resultados], start=comienzo_indice):
         id, titulo, anyo, director, tipo, ruta_fichero = tupla
         print("{}.\t{} ({}).\t{}.\t {} [{}]".format(i, titulo, anyo, director, tipo, ruta_fichero))
     print()
-    visualizar_descripcion(resultados)
+
+    visualizar_descripcion(resultados, pagina)
 
 
 def listar_directores():
